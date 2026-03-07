@@ -1,0 +1,13 @@
+{
+  "base_price": 0.9179468454649005,
+  "competitor_price_1": 0.04035387456105449,
+  "competitor_price_2": 0.03885358889866798,
+  "inventory_level": 0.00042581291798013,
+  "demand_score": 0.0021097916923654095,
+  "day_of_week": 8.757865727584266e-05,
+  "month": 5.729640044136685e-05,
+  "is_weekend": 9.770753126802517e-06,
+  "is_holiday_season": 4.078326241197879e-06,
+  "customer_rating": 0.00014845297627656893,
+  "category_encoded": 2.9093516697271947e-06
+}
