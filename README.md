@@ -1,5 +1,11 @@
 # Retail AI Dynamic Pricing Optimization Engine
 
+## 🚀 Live Demo
+
+Try the deployed AI Dynamic Pricing Engine here:
+
+https://dynamic-pricing-ai.streamlit.app
+
 ## Problem Statement
 Retail businesses often use static pricing, where product prices remain fixed regardless of demand or market conditions. This leads to lost revenue opportunities.
 
