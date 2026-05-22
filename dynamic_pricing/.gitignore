@@ -3,4 +3,5 @@ __pycache__/
 *.pyc
 .env
 *.pkl
+!model/pricing_model.pkl
 data/retail_data.csv

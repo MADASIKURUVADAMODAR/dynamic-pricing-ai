@@ -4,12 +4,15 @@ from pydantic import BaseModel
 import joblib
 import numpy as np
 import json
+from pathlib import Path
 
 app = FastAPI(title="AI Dynamic Pricing Engine", version="1.0")
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-model_data = joblib.load('model/pricing_model.pkl')
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+model_data = joblib.load(BASE_DIR / 'model' / 'pricing_model.pkl')
 model = model_data['model']
 encoder = model_data['encoder']
 target_mode = model_data.get('target_mode', 'absolute_price')
@@ -112,7 +115,7 @@ def predict_price(req: PricingRequest):
 
 @app.get("/feature-importance")
 def get_feature_importance():
-    with open('model/feature_importance.json') as f:
+    with open(BASE_DIR / 'model' / 'feature_importance.json') as f:
         return json.load(f)
 
 @app.get("/categories")
