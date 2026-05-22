@@ -8,7 +8,7 @@ from datetime import datetime
 
 st.set_page_config(page_title="AI Dynamic Pricing Engine", page_icon="💰", layout="wide")
 
-API_URL = "http://localhost:8000"
+API_URL = "https://dynamic-pricing-ai-rah3.onrender.com"
 
 st.markdown("""
 <style>
