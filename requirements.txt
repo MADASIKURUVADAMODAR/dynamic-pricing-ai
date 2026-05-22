@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 fastapi
 uvicorn[standard]
 pydantic
@@ -7,4 +8,11 @@ scikit-learn
 joblib
 streamlit
 requests
+=======
+streamlit
+pandas
+numpy
+scikit-learn
+joblib
+>>>>>>> c12699e5641cadbd17614796e84c80b4c4f89192
 plotly
