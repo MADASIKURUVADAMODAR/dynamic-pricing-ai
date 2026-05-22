@@ -1,0 +1,24 @@
+[33mcommit c12699e5641cadbd17614796e84c80b4c4f89192[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: MADASI KURUVA DAMODAR <164639914+MADASIKURUVADAMODAR@users.noreply.github.com>
+Date:   Sat Mar 7 16:59:07 2026 +0530
+
+    Add live demo section to README
+    
+    Added a section for a live demo link to the README.
+
+[1mdiff --git a/README.md b/README.md[m
+[1mindex 25a0c96..a3f4fc8 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -1,5 +1,11 @@[m
+ # Retail AI Dynamic Pricing Optimization Engine[m
+ [m
+[32m+[m[32m## 🚀 Live Demo[m
+[32m+[m
+[32m+[m[32mTry the deployed AI Dynamic Pricing Engine here:[m
+[32m+[m
+[32m+[m[32mhttps://dynamic-pricing-ai.streamlit.app[m
+[32m+[m
+ ## Problem Statement[m
+ Retail businesses often use static pricing, where product prices remain fixed regardless of demand or market conditions. This leads to lost revenue opportunities.[m
+ [m
