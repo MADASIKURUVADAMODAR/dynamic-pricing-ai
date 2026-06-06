@@ -4,9 +4,13 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_absolute_error, r2_score
+import sklearn
 import joblib
 import os
 import json
+import platform
+from datetime import datetime, timezone
+from pathlib import Path
 
 
 def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -38,7 +42,12 @@ def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def train_pricing_model(data_path='data/retail_data.csv', model_path='model/pricing_model.pkl'):
+def train_pricing_model(data_path=None, model_path=None):
+    base_dir = Path(__file__).resolve().parents[1]
+    data_path = Path(data_path) if data_path else base_dir / 'data' / 'retail_data.csv'
+    model_path = Path(model_path) if model_path else base_dir / 'model' / 'pricing_model.pkl'
+    importance_path = model_path.parent / 'feature_importance.json'
+
     print("📊 Loading data...")
     df = pd.read_csv(data_path)
 
@@ -87,15 +96,27 @@ def train_pricing_model(data_path='data/retail_data.csv', model_path='model/pric
     print(f"✅ MAE: ${mae:.2f}")
     print(f"✅ R² Score: {r2:.4f}")
 
-    os.makedirs('model', exist_ok=True)
+    os.makedirs(model_path.parent, exist_ok=True)
+    metadata = {
+        'created_at_utc': datetime.now(timezone.utc).isoformat(),
+        'python_version': platform.python_version(),
+        'numpy_version': np.__version__,
+        'pandas_version': pd.__version__,
+        'sklearn_version': sklearn.__version__,
+        'joblib_version': joblib.__version__,
+        'model_class': 'GradientBoostingRegressor',
+    }
+
     joblib.dump(
         {
             'model': model,
             'encoder': le,
             'features': feature_cols,
-            'target_mode': 'relative_delta'
+            'target_mode': 'relative_delta',
+            'metadata': metadata,
         },
-        model_path
+        model_path,
+        compress=3,
     )
 
     feature_importance_df = pd.DataFrame({
@@ -117,10 +138,11 @@ def train_pricing_model(data_path='data/retail_data.csv', model_path='model/pric
         row.feature: round(float(row.importance_pct), 4)
         for row in feature_importance_df.itertuples(index=False)
     }
-    with open('model/feature_importance.json', 'w') as f:
+    with open(importance_path, 'w') as f:
         json.dump(importance, f, indent=2)
 
     print(f"💾 Model saved → {model_path}")
+    print(f"🧾 Metadata: sklearn={metadata['sklearn_version']} python={metadata['python_version']}")
     return model, le, {'mae': mae, 'r2': r2}
 
 if __name__ == '__main__':

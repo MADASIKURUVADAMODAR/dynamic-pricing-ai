@@ -3,24 +3,65 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import numpy as np
+import pandas as pd
 import json
 from pathlib import Path
+import sklearn
 
 app = FastAPI(title="AI Dynamic Pricing Engine", version="1.0")
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 BASE_DIR = Path(__file__).resolve().parents[1]
+MODEL_PATH = BASE_DIR / 'model' / 'pricing_model.pkl'
+FEATURE_IMPORTANCE_PATH = BASE_DIR / 'model' / 'feature_importance.json'
 
-model_data = joblib.load(BASE_DIR / 'model' / 'pricing_model.pkl')
-model = model_data['model']
-encoder = model_data['encoder']
-target_mode = model_data.get('target_mode', 'absolute_price')
-model_features = model_data.get('features', [
+model = None
+encoder = None
+target_mode = 'absolute_price'
+model_features = []
+model_metadata = {}
+
+DEFAULT_FEATURES = [
     'base_price', 'competitor_price_1', 'competitor_price_2',
     'inventory_level', 'demand_score', 'day_of_week', 'month',
     'is_weekend', 'is_holiday_season', 'customer_rating', 'category_encoded'
-])
+]
+
+
+def load_model_artifact() -> None:
+    global model, encoder, target_mode, model_features, model_metadata
+
+    if not MODEL_PATH.exists():
+        raise RuntimeError(f"Model file not found: {MODEL_PATH}")
+
+    try:
+        model_data = joblib.load(MODEL_PATH)
+    except Exception as exc:
+        raise RuntimeError(
+            f"Failed to load model artifact at {MODEL_PATH}. "
+            "This is usually caused by sklearn version mismatch between training and runtime."
+        ) from exc
+
+    model = model_data['model']
+    encoder = model_data['encoder']
+    target_mode = model_data.get('target_mode', 'absolute_price')
+    model_features = model_data.get('features', DEFAULT_FEATURES)
+    model_metadata = model_data.get('metadata', {})
+
+    trained_with = model_metadata.get('sklearn_version')
+    running_with = sklearn.__version__
+    if trained_with and trained_with != running_with:
+        raise RuntimeError(
+            "Incompatible sklearn version for serialized model. "
+            f"Model trained with sklearn={trained_with}, runtime has sklearn={running_with}. "
+            "Retrain with runtime version or pin runtime to the training version."
+        )
+
+
+@app.on_event("startup")
+def startup_load_model() -> None:
+    load_model_artifact()
 
 class PricingRequest(BaseModel):
     category: str
@@ -75,13 +116,13 @@ def root():
 def predict_price(req: PricingRequest):
     try:
         category_encoded = encoder.transform([req.category])[0]
-    except:
+    except Exception:
         category_encoded = 0
 
     feature_map = build_feature_map(req, category_encoded)
-    features = np.array([[feature_map[col] for col in model_features]])
+    features_df = pd.DataFrame([[feature_map[col] for col in model_features]], columns=model_features)
 
-    raw_prediction = float(model.predict(features)[0])
+    raw_prediction = float(model.predict(features_df)[0])
     if target_mode == 'relative_delta':
         optimal_price = req.base_price * (1.0 + raw_prediction)
     else:
@@ -115,8 +156,18 @@ def predict_price(req: PricingRequest):
 
 @app.get("/feature-importance")
 def get_feature_importance():
-    with open(BASE_DIR / 'model' / 'feature_importance.json') as f:
+    with open(FEATURE_IMPORTANCE_PATH) as f:
         return json.load(f)
+
+
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "model_loaded": model is not None,
+        "runtime_sklearn": sklearn.__version__,
+        "model_sklearn": model_metadata.get('sklearn_version')
+    }
 
 @app.get("/categories")
 def get_categories():
