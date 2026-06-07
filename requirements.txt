@@ -11,3 +11,4 @@ joblib==1.5.1
 streamlit==1.45.1
 requests==2.32.3
 plotly==5.24.1
+reportlab==4.2.5
